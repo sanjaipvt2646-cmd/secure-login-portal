@@ -3,7 +3,7 @@ const express=require("express"), mysql=require("mysql2/promise"), bcrypt=requir
 const app=express(), PORT=Number(process.env.PORT||3000), SECRET=process.env.JWT_SECRET||"";
 const db=mysql.createPool({host:process.env.DB_HOST||"localhost",port:Number(process.env.DB_PORT||3306),user:process.env.DB_USER||"login_user",password:process.env.DB_PASSWORD||"",database:process.env.DB_NAME||"login_portal",waitForConnections:true,connectionLimit:10});
 if(SECRET.length<32){console.error("Set JWT_SECRET (32+ characters) in .env");process.exit(1)}
-app.use(helmet());app.use(express.json({limit:"10kb"}));app.use(cookieParser());app.use(express.static(path.join(__dirname,"public")));
+app.use(helmet({contentSecurityPolicy:{directives:{"upgrade-insecure-requests":null}}}));app.use(express.json({limit:"10kb"}));app.use(cookieParser());app.use(express.static(path.join(__dirname,"public")));
 const limiter=rateLimit({windowMs:15*60*1000,limit:30});
 function auth(req,res,next){try{req.user=jwt.verify(req.cookies.token||"",SECRET);next()}catch{return res.status(401).json({message:"Please log in."})}}
 function admin(req,res,next){if(!process.env.ADMIN_KEY||req.get("x-admin-key")!==process.env.ADMIN_KEY)return res.status(401).json({message:"Invalid admin key."});next()}

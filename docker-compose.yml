@@ -1,3 +1,4 @@
+
 services:
   db:
     image: mysql:8.4
@@ -15,8 +16,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 15
+
   app:
-    build: .
+    image: 887074880802.dkr.ecr.eu-north-1.amazonaws.com/secure-login-portal:latest
+    pull_policy: always
     restart: unless-stopped
     env_file: .env
     environment:
@@ -26,5 +29,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
 volumes:
   mysql_data:
+
