@@ -1,0 +1,7 @@
+const $=s=>document.querySelector(s), login=$("#loginForm"), register=$("#registerForm"), msg=$("#message"), account=$("#account");
+function mode(m){login.classList.toggle("hide",m!=="login");register.classList.toggle("hide",m!=="register");$("#loginTab").classList.toggle("active",m==="login");$("#registerTab").classList.toggle("active",m==="register");msg.textContent=""}
+$("#loginTab").onclick=()=>mode("login");$("#registerTab").onclick=()=>mode("register");
+async function send(form,url){msg.textContent="";const body=Object.fromEntries(new FormData(form));try{const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw Error(d.message);msg.textContent=d.message;msg.style.color="#16804a";form.reset();if(url.endsWith("register"))mode("login");else await me()}catch(e){msg.textContent=e.message;msg.style.color="#b42318"}}
+login.onsubmit=e=>{e.preventDefault();send(login,"/api/login")};register.onsubmit=e=>{e.preventDefault();send(register,"/api/register")};
+async function me(){const r=await fetch("/api/me");if(r.ok){const d=await r.json();$("#accountText").textContent=d.user.name+" · "+d.user.email;account.classList.remove("hide")}}
+$("#logout").onclick=async()=>{await fetch("/api/logout",{method:"POST"});account.classList.add("hide");msg.textContent="Logged out.";msg.style.color="#16804a"};me();
