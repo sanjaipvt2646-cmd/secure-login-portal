@@ -8,47 +8,37 @@ pipeline {
     }
 
     environment {
-        PROJECT_DIR = '/home/ubuntu/secure-login-portal'
-        COMPOSE_PROJECT = 'secure-login-portal'
+        APP_CONTAINER = 'secure-login-portal-app-1'
         APP_URL = 'http://localhost:3000'
     }
 
     stages {
-
         stage('Checkout') {
             steps {
-                echo 'Checking out source code from GitHub...'
                 checkout scm
             }
         }
 
-        stage('Verify Project') {
+        stage('Verify Files') {
             steps {
                 sh '''
-                    set -e
                     test -f Dockerfile
                     test -f docker-compose.yml
                     test -f package.json
                     test -f server.js
-                    echo "Project files verified successfully."
+                    echo "Project files verified"
                 '''
             }
         }
 
-        stage('Docker Build and Deploy') {
+        stage('Build and Deploy') {
             steps {
                 sh '''
                     set -e
-
-                    echo "Building and deploying application..."
-
                     docker compose \
-                      -p "$COMPOSE_PROJECT" \
-                      --env-file "$PROJECT_DIR/.env" \
-                      -f "$WORKSPACE/docker-compose.yml" \
+                      --project-directory /home/ubuntu/secure-login-portal \
+                      -f /home/ubuntu/secure-login-portal/docker-compose.yml \
                       up -d --build --no-deps app
-
-                    echo "Application deployment completed."
                 '''
             }
         }
@@ -57,21 +47,16 @@ pipeline {
             steps {
                 sh '''
                     set -e
-
-                    echo "Checking application health..."
-
                     for i in $(seq 1 15); do
-                        if curl -fsS "$APP_URL/api/health" > /dev/null; then
-                            echo "Application health check successful!"
+                        if curl -fsS "$APP_URL/api/health" >/dev/null; then
+                            echo "Application is healthy"
                             exit 0
                         fi
-
-                        echo "Waiting for application... attempt $i"
                         sleep 5
                     done
 
-                    echo "Application health check failed."
-                    docker logs secure-login-portal-app-1 --tail 50
+                    echo "Health check failed"
+                    docker logs "$APP_CONTAINER" --tail 50
                     exit 1
                 '''
             }
@@ -80,15 +65,10 @@ pipeline {
 
     post {
         success {
-            echo 'SUCCESS: Secure Login Portal deployed successfully!'
+            echo 'Secure Login Portal deployed successfully!'
         }
-
         failure {
-            echo 'FAILED: Check Jenkins console output for errors.'
-        }
-
-        always {
-            echo 'Jenkins pipeline execution completed.'
+            echo 'Deployment failed. Check Console Output.'
         }
     }
 }
